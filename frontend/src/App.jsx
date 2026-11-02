@@ -7,6 +7,7 @@ import Projects from "./pages/Projects";
 import ProjectBoard from "./pages/ProjectBoard";
 import Team from "./pages/Team";
 import Profile from "./pages/Profile";
+import BackendTest from "./pages/BackendTest";
 
 function NotFound() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/projects/:projectId" element={<ProjectBoard />} />
         <Route path="/team" element={<Team />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/backend-test" element={<BackendTest />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />
