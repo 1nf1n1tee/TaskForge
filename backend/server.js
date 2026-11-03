@@ -1,8 +1,10 @@
+
 import "dotenv/config";
 
 import express from "express";
 import cors from "cors";
 import prisma from "./src/config/database.js";
+import authRoutes from "./src/routes/auth.routes.js";
 
 const app = express();
 
@@ -36,6 +38,8 @@ app.get("/api/db-test", async (req, res) => {
         });
     }
 });
+
+app.use("/api/auth", authRoutes);
 
 const PORT = process.env.PORT || 5000;
 
