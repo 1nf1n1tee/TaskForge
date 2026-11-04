@@ -1,24 +1,19 @@
+
 import jwt from "jsonwebtoken";
 
 const authenticateToken = (req, res, next) => {
     try {
-        // 1. Read the Authorization header
-        const authHeader = req.headers.authorization;
+        const token = req.cookies?.token;
 
-        // 2. Check whether a token was provided
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        if (!token) {
             return res.status(401).json({
                 success: false,
                 message: "Authentication required. Please log in.",
             });
         }
 
-        // 3. Extract the token
-        const token = authHeader.split(" ")[1];
-
-        // 4. Check whether the JWT secret is configured
         if (!process.env.JWT_SECRET) {
-            console.error("JWT_SECRET is missing from environment variables.");
+            console.error("JWT_SECRET is missing.");
 
             return res.status(500).json({
                 success: false,
@@ -26,10 +21,11 @@ const authenticateToken = (req, res, next) => {
             });
         }
 
-        // 5. Verify the token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(
+            token,
+            process.env.JWT_SECRET
+        );
 
-        // 6. Attach the user's information to the request
         if (!decoded.userId) {
             return res.status(401).json({
                 success: false,
@@ -42,7 +38,6 @@ const authenticateToken = (req, res, next) => {
             email: decoded.email,
         };
 
-        // 7. Allow the request to continue
         next();
 
     } catch (error) {

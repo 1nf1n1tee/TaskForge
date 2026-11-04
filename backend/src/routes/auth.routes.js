@@ -139,11 +139,17 @@ router.post("/login", async (req, res) => {
                 expiresIn: "24h",
             }
         );
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 24 * 60 * 60 * 1000,
+            path: "/",
+        });
 
         return res.status(200).json({
             success: true,
             message: "Login successful!",
-            token,
             user: {
                 id: user.id,
                 name: user.name,
@@ -196,6 +202,19 @@ router.get("/me", authenticateToken, async (req, res) => {
             message: "Something went wrong.",
         });
     }
+});
+router.post("/logout", (req, res) => {
+    res.clearCookie("token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+    });
+
+    return res.status(200).json({
+        success: true,
+        message: "Logged out successfully.",
+    });
 });
 
 export default router;
