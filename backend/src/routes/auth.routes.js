@@ -3,6 +3,7 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import prisma from "../config/database.js";
 import jwt from "jsonwebtoken";
+import authenticateToken from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
@@ -138,11 +139,17 @@ router.post("/login", async (req, res) => {
                 expiresIn: "24h",
             }
         );
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 24 * 60 * 60 * 1000,
+            path: "/",
+        });
 
         return res.status(200).json({
             success: true,
             message: "Login successful!",
-            token,
             user: {
                 id: user.id,
                 name: user.name,
@@ -158,6 +165,56 @@ router.post("/login", async (req, res) => {
             message: "Something went wrong during login.",
         });
     }
+});
+// GET /api/auth/me
+router.get("/me", authenticateToken, async (req, res) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: {
+                id: req.user.userId,
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                createdAt: true,
+            },
+        });
+
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: "User account no longer exists.",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Authenticated successfully!",
+            user,
+        });
+
+    } catch (error) {
+        console.error("Authentication error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong.",
+        });
+    }
+});
+router.post("/logout", (req, res) => {
+    res.clearCookie("token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+    });
+
+    return res.status(200).json({
+        success: true,
+        message: "Logged out successfully.",
+    });
 });
 
 export default router;
